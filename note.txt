@@ -1,0 +1,6 @@
+ssh username@your-server-address
+nvidia-smi
+git clone https://github.com/thulx18/PRDetect.git
+cd PRDetect
+python -m venv venv
+source venv/bin/activate
