@@ -16,10 +16,10 @@ from sklearn.metrics import roc_auc_score, f1_score, precision_score, recall_sco
 # ============ CẤU HÌNH ============
 GRAPH_DATA_DIR = "graph_data"
 
+TRAIN_FILE = "detectrl_train_split.pkl"
+VAL_FILE = "detectrl_val.pkl"
+TEST_FILE = "detectrl_test.pkl"
 
-TRAIN_FILE = "hc3_train.pkl"      
-VAL_FILE = "hc3_val.pkl"         
-TEST_FILE = "hc3_test.pkl"      
 
 HIDDEN_DIM = 256  
 OUTPUT_DIM = 64
@@ -228,98 +228,50 @@ with torch.no_grad():
         
         pred = (output >= 0.5).long()
         correct_test += (pred == data.y.view(-1, 1)).sum().item()
-        
-        all_preds.append(pred.item())
-        all_labels.append(data.y.item())
 
 test_time = time.time() - start_time
 
-
+# Calculate metrics
 avg_test_loss = test_loss / test_len
 test_acc = correct_test / test_len
 
+# Convert to numpy for sklearn metrics
+y_true = test_data['y'].cpu().numpy()
+y_pred = [1 if p >= 0.5 else 0 for p in test_predictions]
 
-y_true = np.array(all_labels)
-y_pred = np.array(all_preds)
-y_prob = np.array(test_predictions)
+test_f1 = f1_score(y_true, y_pred)
+test_auc = roc_auc_score(y_true, test_predictions)
 
-# Tính các metrics
-test_precision = precision_score(y_true, y_pred, average='binary')
-test_recall = recall_score(y_true, y_pred, average='binary')
-test_f1 = f1_score(y_true, y_pred, average='binary')
-test_auc = roc_auc_score(y_true, y_prob)
-
-# Confusion Matrix
-tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-
-# Classification Report
-class_report = classification_report(y_true, y_pred, target_names=['Human (0)', 'AI (1)'])
-
-# ============ IN KẾT QUẢ ============
+# Print results
 print("\n" + "="*60)
-print(" HC3 TEST RESULTS - FULL METRICS")
+print(" TEST RESULTS")
 print("="*60)
-print(f"\n Classification Metrics:")
-print(f"  Accuracy:  {test_acc:.4f} ({test_acc*100:.2f}%)")
-print(f"  Precision: {test_precision:.4f}")
-print(f"  Recall:    {test_recall:.4f}")
-print(f"  F1-Score:  {test_f1:.4f}")
-print(f"  AUROC:     {test_auc:.4f}")
-print(f"  Loss:      {avg_test_loss:.4f}")
-
-print(f"\n Confusion Matrix:")
-print(f"              Predicted")
-print(f"              Human (0)  AI (1)")
-print(f"  Human (0)   {tn:>6}    {fp:>6}")
-print(f"  AI (1)      {fn:>6}    {tp:>6}")
-
-print(f"\n Classification Report:")
-print(class_report)
-
-print(f"\n⏱  Time:")
-print(f"  Training: {training_time:.2f} seconds")
-print(f"  Testing:  {test_time:.2f} seconds")
+print(f"Test Loss:     {avg_test_loss:.4f}")
+print(f"Test Accuracy: {test_acc:.4f} ({test_acc*100:.2f}%)")
+print(f"Test F1 Score: {test_f1:.4f}")
+print(f"Test AUC:      {test_auc:.4f}")
+print(f"Test Time:     {test_time:.2f} seconds")
 print("="*60)
 
 # ============ LƯU KẾT QUẢ ============
 os.makedirs('results', exist_ok=True)
-with open(f"results/hc3_results_seed_{SEED}.txt", "w", encoding="utf-8") as f:
-    f.write("="*60 + "\n")
-    f.write("PRDetect - HC3 Results\n")
-    f.write("="*60 + "\n\n")
-    
-    f.write(" CONFIGURATION\n")
-    f.write(f"  Dataset: HC3\n")
-    f.write(f"  Seed: {SEED}\n")
-    f.write(f"  Model: PRDetect GCN (2 layers)\n")
-    f.write(f"  Epochs: {EPOCHS}\n")
-    f.write(f"  Learning Rate: {LEARNING_RATE}\n")
-    f.write(f"  Hidden Dim: {HIDDEN_DIM}\n")
-    f.write(f"  Dropout: {DROPOUT}\n")
-    f.write(f"  Train samples: {train_len}\n")
-    f.write(f"  Val samples: {val_len}\n")
-    f.write(f"  Test samples: {test_len}\n")
-    
-    f.write("\n CLASSIFICATION METRICS\n")
-    f.write(f"  Accuracy:  {test_acc:.4f}\n")
-    f.write(f"  Precision: {test_precision:.4f}\n")
-    f.write(f"  Recall:    {test_recall:.4f}\n")
-    f.write(f"  F1-Score:  {test_f1:.4f}\n")
-    f.write(f"  AUROC:     {test_auc:.4f}\n")
-    f.write(f"  Loss:      {avg_test_loss:.4f}\n")
-    
-    f.write("\n CONFUSION MATRIX\n")
-    f.write(f"  TP: {tp}, TN: {tn}, FP: {fp}, FN: {fn}\n")
-    
-    f.write("\n CLASSIFICATION REPORT\n")
-    f.write(class_report)
-    
-    f.write("\n⏱ TIME\n")
-    f.write(f"  Training time: {training_time:.2f}s\n")
-    f.write(f"  Testing time: {test_time:.2f}s\n")
-    
-    f.write(f"\n Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-    f.write("="*60 + "\n")
+with open(f"results/detectrl_results_seed_{SEED}.txt", "w", encoding="utf-8") as f:
+    f.write(f"Dataset: DetectRL\n")
+    f.write(f"Seed: {SEED}\n")
+    f.write(f"Model: PRDetect GCN (2 layers)\n")
+    f.write(f"Epochs: {EPOCHS}\n")
+    f.write(f"Learning Rate: {LEARNING_RATE}\n")
+    f.write(f"Hidden Dim: {HIDDEN_DIM}\n")
+    f.write(f"Dropout: {DROPOUT}\n")
+    f.write(f"\n")
+    f.write(f"Test Accuracy: {test_acc:.4f}\n")
+    f.write(f"Test F1 Score: {test_f1:.4f}\n")
+    f.write(f"Test AUC: {test_auc:.4f}\n")
+    f.write(f"Test Loss: {avg_test_loss:.4f}\n")
+    f.write(f"\n")
+    f.write(f"Training time: {training_time:.2f}s\n")
+    f.write(f"Testing time: {test_time:.2f}s\n")
+    f.write(f"Date: {datetime.now()}\n")
 
 print(f"\n Results saved to results/hc3_results_seed_{SEED}.txt")
 
