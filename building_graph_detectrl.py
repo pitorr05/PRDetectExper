@@ -148,7 +148,7 @@ def save_pkl(file_name, all_token_embeddings, all_edge_index, y, output_dir="gra
 
 if __name__ == '__main__':
     # Đường dẫn đến dữ liệu của bạn
-    BASE_DIR = r"D:\DATA DETECT LLM\PRDetect"
+    BASE_DIR = r"."
     DATA_DIR = os.path.join(BASE_DIR, "data")
     
     # Định nghĩa các file
