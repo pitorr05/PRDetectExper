@@ -3,6 +3,8 @@
 
 ### Installation
 ```shell
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+pip install torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.4.0+cu124.html
 pip install -r requirements.txt
 pip -m spacy download en_core_web_sm
 ```
